@@ -30,7 +30,7 @@ from config import get_cameras, get_config, get_go2rtc_config, get_app_config
 from database import init_db
 from recording.manager import RecordingManager, set_manager
 from recording.reconciler import reconcile_on_startup
-from api import recordings, storage, cameras, settings
+from api import recordings, storage, cameras, settings, whep
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -188,37 +188,7 @@ app.include_router(recordings.router, prefix="/api")
 app.include_router(storage.router,    prefix="/api")
 app.include_router(cameras.router,    prefix="/api")
 app.include_router(settings.router,   prefix="/api")
-
-
-# ─── WHEP Proxy Endpoint ──────────────────────────────────────────────────────
-whep_router = APIRouter(prefix="/api")
-
-@whep_router.api_route("/whep", methods=["POST", "OPTIONS"])
-async def whep_proxy(request: Request):
-    """Proxy WHEP WebRTC SDP requests directly to go2rtc to prevent CORS issues."""
-    if request.method == "OPTIONS":
-        return Response(status_code=200)
-
-    dst = request.query_params.get("dst", "")
-    body = await request.body()
-
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.post(
-                f"http://127.0.0.1:1984/api/whep?dst={dst}",
-                data=body,
-                headers={"Content-Type": "application/sdp"}
-            ) as resp:
-                resp_body = await resp.text()
-                return Response(
-                    content=resp_body,
-                    status_code=resp.status,
-                    media_type="application/sdp"
-                )
-        except Exception as e:
-            return Response(content=str(e), status_code=500)
-
-app.include_router(whep_router)
+app.include_router(whep.router,       prefix="/api")
 
 
 # ─── Serve built React frontend ───────────────────────────────────────────────
