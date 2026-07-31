@@ -26,12 +26,12 @@ interface UseWebRTCResult {
   retry: () => void;
 }
 
+const DEFAULT_GO2RTC_PORT = 1984;
 const INITIAL_RETRY_MS    = 3_000;
 const MAX_RETRY_MS        = 30_000;
 
 function getGo2rtcUrl(): string {
-  // Use relative URL so all requests go to port 8000 (FastAPI proxy)
-  return window.location.origin;
+  return `http://${window.location.hostname}:${DEFAULT_GO2RTC_PORT}`;
 }
 
 export function useWebRTC({

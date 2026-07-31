@@ -52,6 +52,7 @@ def _write_go2rtc_yaml(cameras_cfg: list[dict], go2rtc_cfg: dict) -> None:
     doc = {
         "streams": streams,
         "api": {
+            "listen": ":1984",
             "origin": "*",       # Allow CORS from browser (port 8000 → port 1984)
         },
         "webrtc": {
