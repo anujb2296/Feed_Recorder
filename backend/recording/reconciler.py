@@ -56,53 +56,53 @@ async def reconcile_on_startup() -> None:
     and update their status to 'completed' or 'gap' accordingly.
     """
     with get_db() as db:
-        in_progress = (
-            db.query(Recording)
+        in_progress_rows = (
+            db.query(Recording.id, Recording.file_path, Recording.start_time)
             .filter(Recording.status == "recording")
             .all()
         )
 
-    if not in_progress:
+    if not in_progress_rows:
         logger.info("[reconciler] No in-progress recordings to reconcile.")
         return
 
     logger.info(
-        f"[reconciler] Found {len(in_progress)} recording(s) to reconcile "
+        f"[reconciler] Found {len(in_progress_rows)} recording(s) to reconcile "
         "(likely from a previous crash or shutdown)."
     )
 
-    for rec in in_progress:
-        path = Path(rec.file_path)
+    for rec_id, file_path, start_time in in_progress_rows:
+        path = Path(file_path)
 
         if not path.exists():
             # File missing → log as gap
             with get_db() as db:
-                r = db.query(Recording).get(rec.id)
+                r = db.query(Recording).get(rec_id)
                 if r:
                     r.status = "gap"
             logger.warning(
-                f"[reconciler] File missing → gap: {rec.file_path}"
+                f"[reconciler] File missing → gap: {file_path}"
             )
             continue
 
-        info = await _ffprobe_info(rec.file_path)
+        info = await _ffprobe_info(file_path)
         if info is None:
             # Can't probe → leave as 'recording' (scanner will handle it later)
             logger.warning(
-                f"[reconciler] Could not probe file, leaving as-is: {rec.file_path}"
+                f"[reconciler] Could not probe file, leaving as-is: {file_path}"
             )
             continue
 
         duration = info["duration"]
         size     = info["size"]
         end_time = (
-            rec.start_time + timedelta(seconds=duration)
-            if rec.start_time and duration > 0
+            start_time + timedelta(seconds=duration)
+            if start_time and duration > 0
             else None
         )
 
         with get_db() as db:
-            r = db.query(Recording).get(rec.id)
+            r = db.query(Recording).get(rec_id)
             if r:
                 r.status           = "completed"
                 r.duration_seconds = duration
