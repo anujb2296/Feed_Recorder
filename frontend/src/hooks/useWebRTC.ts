@@ -26,7 +26,6 @@ interface UseWebRTCResult {
   retry: () => void;
 }
 
-const DEFAULT_GO2RTC_PORT = 1984;
 const INITIAL_RETRY_MS    = 3_000;
 const MAX_RETRY_MS        = 30_000;
 
