@@ -14,10 +14,12 @@ services:
     container_name: cctv-go2rtc
     network_mode: host
     restart: always
-    volumes:
-      - ./config/go2rtc.yaml:/config/go2rtc.yaml:ro
     environment:
       - GO2RTC_CONFIG=/config/go2rtc.yaml
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./config/go2rtc.yaml:/config/go2rtc.yaml:ro
+      - /etc/localtime:/etc/localtime:ro
 
   # ── FastAPI backend + recording engine ──────────────────────
   backend:
@@ -29,12 +31,6 @@ services:
     restart: always
     depends_on:
       - go2rtc
-    volumes:
-      - ./backend:/app
-      - ./config/config.yaml:/config/config.yaml:ro
-      - ./config/go2rtc.yaml:/config/go2rtc.yaml          # writable: backend regenerates on startup
-      - ${RECORDINGS_PATH:-/home/waltserver/waltcloud/camera_recordings}:/recordings
-      - cctv-db:/data
     environment:
       - CONFIG_PATH=/config/config.yaml
       - GO2RTC_YAML_PATH=/config/go2rtc.yaml
@@ -42,6 +38,14 @@ services:
       - RECORDINGS_PATH=/recordings
       - CAM1_RTSP_URL=${CAM1_RTSP_URL}
       - CAM2_RTSP_URL=${CAM2_RTSP_URL}
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./backend:/app
+      - ./config/config.yaml:/config/config.yaml:ro
+      - ./config/go2rtc.yaml:/config/go2rtc.yaml          # writable: backend regenerates on startup
+      - ${RECORDINGS_PATH:-/home/waltserver/waltcloud/camera_recordings}:/recordings
+      - cctv-db:/data
+      - /etc/localtime:/etc/localtime:ro
 
 volumes:
   cctv-db:
