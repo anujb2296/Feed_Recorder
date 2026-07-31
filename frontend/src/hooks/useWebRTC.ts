@@ -31,7 +31,7 @@ const INITIAL_RETRY_MS    = 3_000;
 const MAX_RETRY_MS        = 30_000;
 
 function getGo2rtcUrl(): string {
-  return `http://${window.location.hostname}:${DEFAULT_GO2RTC_PORT}`;
+  return window.location.origin;
 }
 
 export function useWebRTC({
