@@ -1,0 +1,27 @@
+# ─────────────────────────────────────────────────────────────────
+#  CCTV NVR — Application Configuration
+#  Camera RTSP URLs are read from environment variables (set in .env)
+#  to keep credentials out of this file.
+# ─────────────────────────────────────────────────────────────────
+
+cameras:
+  - id: cam1
+    name: "Camera 1"
+    rtsp_url: "${CAM1_RTSP_URL}"   # resolved from .env / environment
+
+  - id: cam2
+    name: "Camera 2"
+    rtsp_url: "${CAM2_RTSP_URL}"
+
+recording:
+  segment_seconds: 3600          # 1 hour per file
+  storage_path: /recordings      # inside container; mapped in docker-compose
+
+go2rtc:
+  api_url: "http://localhost:1984"
+  webrtc_port: 8555
+
+app:
+  backend_port: 8000
+  default_retention_days: 7      # default window shown in Recordings UI on first load
+  log_level: "info"              # debug | info | warning | error

@@ -1,0 +1,47 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────
+#  CCTV NVR Stack
+#  All services use network_mode: host so WebRTC ICE negotiation
+#  works on the LAN without NAT issues and without a STUN server.
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  # ── go2rtc: RTSP → WebRTC bridge (50-150ms live view) ──────
+  go2rtc:
+    image: alexxit/go2rtc:latest
+    container_name: cctv-go2rtc
+    network_mode: host
+    restart: always
+    volumes:
+      - ./config/go2rtc.yaml:/config/go2rtc.yaml:ro
+    environment:
+      - GO2RTC_CONFIG=/config/go2rtc.yaml
+
+  # ── FastAPI backend + recording engine ──────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cctv-backend
+    network_mode: host
+    restart: always
+    depends_on:
+      - go2rtc
+    volumes:
+      - ./config/config.yaml:/config/config.yaml:ro
+      - ./config/go2rtc.yaml:/config/go2rtc.yaml          # writable: backend regenerates on startup
+      - ${RECORDINGS_PATH:-/home/waltserver/waltcloud/camera_recordings}:/recordings
+      - cctv-db:/data
+    environment:
+      - CONFIG_PATH=/config/config.yaml
+      - GO2RTC_YAML_PATH=/config/go2rtc.yaml
+      - DB_PATH=/data/cctv.db
+      - RECORDINGS_PATH=/recordings
+      - CAM1_RTSP_URL=${CAM1_RTSP_URL}
+      - CAM2_RTSP_URL=${CAM2_RTSP_URL}
+
+volumes:
+  cctv-db:
+    driver: local
