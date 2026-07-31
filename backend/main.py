@@ -21,7 +21,7 @@ from pathlib import Path
 
 import aiohttp
 import yaml
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -191,7 +191,9 @@ app.include_router(settings.router,   prefix="/api")
 
 
 # ─── WHEP Proxy Endpoint ──────────────────────────────────────────────────────
-@app.api_route("/api/whep", methods=["POST", "OPTIONS"])
+whep_router = APIRouter(prefix="/api")
+
+@whep_router.api_route("/whep", methods=["POST", "OPTIONS"])
 async def whep_proxy(request: Request):
     """Proxy WHEP WebRTC SDP requests directly to go2rtc to prevent CORS issues."""
     if request.method == "OPTIONS":
@@ -203,7 +205,7 @@ async def whep_proxy(request: Request):
     async with aiohttp.ClientSession() as session:
         try:
             async with session.post(
-                f"http://localhost:1984/api/whep?dst={dst}",
+                f"http://127.0.0.1:1984/api/whep?dst={dst}",
                 data=body,
                 headers={"Content-Type": "application/sdp"}
             ) as resp:
@@ -215,6 +217,8 @@ async def whep_proxy(request: Request):
                 )
         except Exception as e:
             return Response(content=str(e), status_code=500)
+
+app.include_router(whep_router)
 
 
 # ─── Serve built React frontend ───────────────────────────────────────────────
