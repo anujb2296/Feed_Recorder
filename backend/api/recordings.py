@@ -42,7 +42,7 @@ def list_recordings(
             raise HTTPException(400, "date must be YYYY-MM-DD")
 
     elif days:
-        since = datetime.utcnow() - timedelta(days=days)
+        since = datetime.now() - timedelta(days=days)
         q = q.filter(Recording.start_time >= since)
 
     rows = q.order_by(Recording.start_time.asc()).all()
@@ -74,7 +74,7 @@ def list_gaps(
     if camera_id:
         q = q.filter(Recording.camera_id == camera_id)
     if days:
-        since = datetime.utcnow() - timedelta(days=days)
+        since = datetime.now() - timedelta(days=days)
         q = q.filter(Recording.start_time >= since)
     rows = q.order_by(Recording.start_time.asc()).all()
     return [

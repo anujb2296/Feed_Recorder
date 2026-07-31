@@ -13,15 +13,24 @@ function formatTime(iso: string): string {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-function formatDateHeader(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  const today     = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+function getLocalDateString(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
-  if (dateStr === today.toISOString().slice(0, 10))     return `Today — ${d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}`;
-  if (dateStr === yesterday.toISOString().slice(0, 10)) return `Yesterday — ${d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}`;
-  return d.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+function formatDateHeader(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  const todayStr = getLocalDateString(new Date());
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = getLocalDateString(yesterday);
+
+  if (dateStr === todayStr) return `Today — ${dateObj.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}`;
+  if (dateStr === yesterdayStr) return `Yesterday — ${dateObj.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}`;
+  return dateObj.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 }
 
 export default function RecordingTimeline({
@@ -40,9 +49,9 @@ export default function RecordingTimeline({
   };
 
   // Auto-open today on first render
-  const today = new Date().toISOString().slice(0, 10);
-  if (dates.includes(today) && openDays.size === 0) {
-    setOpenDays(new Set([today]));
+  const todayStr = getLocalDateString(new Date());
+  if (dates.includes(todayStr) && openDays.size === 0) {
+    setOpenDays(new Set([todayStr]));
   }
 
   if (dates.length === 0) {
