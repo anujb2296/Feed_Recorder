@@ -42,7 +42,8 @@ def list_recordings(
             raise HTTPException(400, "date must be YYYY-MM-DD")
 
     elif days:
-        since = datetime.now() - timedelta(days=days)
+        # Add 1 day buffer to prevent timezone boundary mismatch (UTC vs local)
+        since = datetime.now() - timedelta(days=days + 1)
         q = q.filter(Recording.start_time >= since)
 
     rows = q.order_by(Recording.start_time.asc()).all()
