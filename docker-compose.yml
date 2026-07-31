@@ -30,6 +30,7 @@ services:
     depends_on:
       - go2rtc
     volumes:
+      - ./backend:/app
       - ./config/config.yaml:/config/config.yaml:ro
       - ./config/go2rtc.yaml:/config/go2rtc.yaml          # writable: backend regenerates on startup
       - ${RECORDINGS_PATH:-/home/waltserver/waltcloud/camera_recordings}:/recordings
